@@ -4,6 +4,7 @@ SmalltalkCISpec {
           #baseline : 'ArangoDB',
           #directory : 'source',
           #load : [ 'Tests' ],
+          #useLatestMetacello : true,
           #platforms : [ #pharo ]
       }
   ]
