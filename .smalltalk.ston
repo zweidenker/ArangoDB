@@ -1,0 +1,11 @@
+SmalltalkCISpec {
+  #loading : [
+      SCIMetacelloLoadSpec {
+          #baseline : 'ArangoDB',
+          #directory : 'source',
+          #load : [ 'Tests' ],
+          #platforms : [ #pharo ]
+      }
+  ]
+}
+
