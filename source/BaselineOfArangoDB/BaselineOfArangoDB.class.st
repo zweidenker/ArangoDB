@@ -15,7 +15,10 @@ BaselineOfArangoDB >> baseline: spec [
 				package: 'Arango-Tests' with: [ spec requires: #('Arango-Core' 'Mocketry'). ].
 
 			spec 
-				baseline: 'OpenAPI' with: [ spec repository: 'github://zweidenker/OpenAPI/source' ];
+				baseline: 'OpenAPI' with: [ 
+					spec 
+						repository: 'github://zweidenker/OpenAPI/source';
+						loads: #( 'Client' ) ];
 				baseline: 'Mocketry' with: [ spec repository: 'github://dionisiydk/Mocketry:v4.0.x'. ].
 
 			spec
