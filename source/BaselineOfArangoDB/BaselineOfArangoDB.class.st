@@ -12,7 +12,7 @@ BaselineOfArangoDB >> baseline: spec [
 		do: [ 
 			spec
 				package: 'Arango-Core' with: [ spec requires: #('OpenAPI') ];
-				package: 'Arango-Tests' with: [ spec requires: #('Arango-Core'). ].
+				package: 'Arango-Tests' with: [ spec requires: #('Arango-Core' 'Mocketry'). ].
 
 			spec 
 				baseline: 'OpenAPI' with: [ spec repository: 'github://zweidenker/OpenAPI/source' ];
