@@ -8,3 +8,8 @@ Class {
 ArangoTests >> testDummy [
 	self fail
 ]
+
+{ #category : #tests }
+ArangoTests >> testDummy2 [
+	self fail
+]
