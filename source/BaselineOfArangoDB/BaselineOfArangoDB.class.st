@@ -9,9 +9,10 @@ BaselineOfArangoDB >> baseline: spec [
 	<baseline>
 	spec
 		for: #common
-		do: [ ""
+		do: [ 
 			spec
-				package: 'Arango-Core' with: [ spec requires: #('OpenAPI'). ].
+				package: 'Arango-Core' with: [ spec requires: #('OpenAPI') ];
+				package: 'Arango-Tests' with: [ spec requires: #('Arango-Core'). ].
 
 			spec 
 				baseline: 'OpenAPI' with: [ spec repository: 'github://zweidenker/OpenAPI/source' ];
@@ -19,5 +20,6 @@ BaselineOfArangoDB >> baseline: spec [
 
 			spec
 				group: 'default' with: #('Core');
-				group: 'Core' with: #('Arango-Core'). ].
+				group: 'Core' with: #('Arango-Core');
+				group: 'Tests' with: #('Arango-Tests'). ]. 
 ]
