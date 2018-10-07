@@ -2,9 +2,9 @@ language: smalltalk
 sudo: required
 
 os:
-- linux
+  - linux
 
 smalltalk:
-- Pharo-6.0
-- Pharo-7.0
+  - Pharo-6.0
+  - Pharo-7.0
 
