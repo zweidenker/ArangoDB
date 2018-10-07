@@ -11900,6 +11900,16 @@ ArangoDBClient >> buildOpenApi [
 ]
 
 { #category : #'as yet unclassified' }
+ArangoDBClient >> createCollection: aString [
+	^ self 
+		operationWithPath: '/_api/collection' 
+		method: #post 
+		arguments: {  }
+		body: { #name -> aString } asDictionary 
+
+]
+
+{ #category : #'as yet unclassified' }
 ArangoDBClient >> createDocument: anObject collection: aString [
 	^ self 
 		operationWithPath: '/_api/document/{collection}' 
