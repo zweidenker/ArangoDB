@@ -6,6 +6,7 @@ Class {
 
 { #category : #'as yet unclassified' }
 ArangoDBClient class >> openApiSpec [ 
+		"API spec compiled at: 2019-06-01T11:51:06+02:00"
 		^ '{
     "openapi": "3.0.0",
     "info": {
@@ -15686,6 +15687,7 @@ ArangoDBClient class >> updateSpec [
 	content := 'api-docs-openapi3.json' asFileReference readStream upToEnd.
 	
 	self class compile: 'openApiSpec 
+		"API spec compiled at: ', DateAndTime now rounded asString, '"
 		^ ''', (content copyReplaceAll: $' asString with: ($' asString ,$' asString) ), ''''
 ]
 
