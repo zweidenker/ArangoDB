@@ -15708,10 +15708,11 @@ ArangoDBClient >> createCollection: aString [
 
 { #category : #'as yet unclassified' }
 ArangoDBClient >> createDocument: anObject collection: aString [
+
 	^ self 
-		operationWithPath: '/_api/document/{collection}' 
-		method: #post 
+		operation: (self openApi operationWithId: 'CreateDocument') 
 		arguments: { #collection -> aString }
 		body: anObject
+		beforeSendDo: [ :client | client request uri query removeKey: 'collection' ]
 
 ]
