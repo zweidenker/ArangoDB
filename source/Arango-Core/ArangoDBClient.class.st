@@ -15698,21 +15698,58 @@ ArangoDBClient >> buildOpenApi [
 
 { #category : #'as yet unclassified' }
 ArangoDBClient >> createCollection: aString [
-	^ self 
-		operationWithPath: '/_api/collection' 
-		method: #post 
-		arguments: {  }
-		body: { #name -> aString } asDictionary 
-
+	^ self execute: [
+		self 
+			operationWithPath: '/_api/collection' 
+			method: #post 
+			arguments: {  }
+			body: { #name -> aString } asDictionary ]
 ]
 
 { #category : #'as yet unclassified' }
 ArangoDBClient >> createDocument: anObject collection: aString [
 
-	^ self 
-		operation: (self openApi operationWithId: 'CreateDocument') 
-		arguments: { #collection -> aString }
-		body: anObject
-		beforeSendDo: [ :client | client request uri query removeKey: 'collection' ]
+	^ self execute: [
+		self 
+			operation: (self openApi operationWithId: 'CreateDocument') 
+			arguments: { #collection -> aString }
+			body: anObject
+			beforeSendDo: [ :client | client request uri query removeKey: 'collection' ] ]
 
+]
+
+{ #category : #'as yet unclassified' }
+ArangoDBClient >> execute: aBlock [
+	| response |
+	response := aBlock value.
+	response isSuccess ifFalse: [ 
+		Error signal: 'nope' ].
+	^ response
+]
+
+{ #category : #'as yet unclassified' }
+ArangoDBClient >> readMany: aClass where: where limit: limit offset: offset [
+	| body |
+	body := { 'collection' -> aClass name. 'example' -> where asDictionary } asDictionary.
+	offset ifNotNil: [ 
+		body at: 'skip' put: offset ].
+	limit ifNotNil: [ 
+		body at: 'limit' put: limit ].
+	^ self execute: [
+		self 
+			operationWithId: 'SimpleQueryBy-example' 
+			arguments: {} 
+			body: body ]
+]
+
+{ #category : #'as yet unclassified' }
+ArangoDBClient >> removeDocumentWithHandle: aString [ 
+	| parts |
+	parts := $/ split: aString.
+	^ self execute: [
+		self 
+			operation: (self openApi operationWithId: 'RemovesMultipleDocuments') 
+			arguments: { #'collection' -> parts first }
+			body: { #'_key' -> parts second } asDictionary
+			beforeSendDo: [ :client |  ] ]
 ]
