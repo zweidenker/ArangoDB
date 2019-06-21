@@ -15698,58 +15698,60 @@ ArangoDBClient >> buildOpenApi [
 
 { #category : #'as yet unclassified' }
 ArangoDBClient >> createCollection: aString [
-	^ self execute: [
-		self 
-			operationWithPath: '/_api/collection' 
-			method: #post 
-			arguments: {  }
-			body: { #name -> aString } asDictionary ]
+	^ self 
+		operationWithId: 'CreateCollection' 
+		arguments: {  }
+		body: { #name -> aString } asDictionary
 ]
 
 { #category : #'as yet unclassified' }
 ArangoDBClient >> createDocument: anObject collection: aString [
 
-	^ self execute: [
-		self 
-			operation: (self openApi operationWithId: 'CreateDocument') 
-			arguments: { #collection -> aString }
-			body: anObject
-			beforeSendDo: [ :client | client request uri query removeKey: 'collection' ] ]
-
+	^ self 
+		operation: (self openApi operationWithId: 'CreateDocument') 
+		arguments: { #collection -> aString }
+		body: anObject
+		beforeSendDo: [ :client | client request uri query removeKey: 'collection' ]
+		
 ]
 
 { #category : #'as yet unclassified' }
-ArangoDBClient >> execute: aBlock [
-	| response |
-	response := aBlock value.
-	response isSuccess ifFalse: [ 
-		Error signal: 'nope' ].
-	^ response
+ArangoDBClient >> handleError: anObject response: aResponse [ 
+	(ArangoAPIError fromResponse: anObject) signal
 ]
 
 { #category : #'as yet unclassified' }
-ArangoDBClient >> readMany: aClass where: where limit: limit offset: offset [
+ArangoDBClient >> readMany: aString where: where limit: limit offset: offset [
 	| body |
-	body := { 'collection' -> aClass name. 'example' -> where asDictionary } asDictionary.
+	body := { 'collection' -> aString . 'example' -> (where ifNil: [ {} ]) asDictionary } asDictionary.
 	offset ifNotNil: [ 
 		body at: 'skip' put: offset ].
 	limit ifNotNil: [ 
 		body at: 'limit' put: limit ].
-	^ self execute: [
-		self 
+	^ self 
 			operationWithId: 'SimpleQueryBy-example' 
 			arguments: {} 
-			body: body ]
+			body: body
+]
+
+{ #category : #'as yet unclassified' }
+ArangoDBClient >> removeAll: aString [
+	^ [ 
+		self 
+			operationWithId: 'RemoveDocumentsByExample' 
+			arguments: {  }
+			body: { #collection -> aString. #example -> Dictionary new  } asDictionary ]
+		on: Error 
+		do: [ :err | ]
 ]
 
 { #category : #'as yet unclassified' }
 ArangoDBClient >> removeDocumentWithHandle: aString [ 
 	| parts |
 	parts := $/ split: aString.
-	^ self execute: [
-		self 
+	^ self 
 			operation: (self openApi operationWithId: 'RemovesMultipleDocuments') 
 			arguments: { #'collection' -> parts first }
 			body: { #'_key' -> parts second } asDictionary
-			beforeSendDo: [ :client |  ] ]
+			beforeSendDo: [ :client |  ]
 ]
