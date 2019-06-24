@@ -15735,6 +15735,16 @@ ArangoDBClient >> readMany: aString where: where limit: limit offset: offset [
 ]
 
 { #category : #'as yet unclassified' }
+ArangoDBClient >> readOne: aString where: where [
+	| body |
+	body := { 'collection' -> aString . 'example' -> (where ifNil: [ {} ]) asPharoQuery } asDictionary.
+	^ self 
+			operationWithId: 'SimpleQueryBy-example' 
+			arguments: {} 
+			body: body
+]
+
+{ #category : #'as yet unclassified' }
 ArangoDBClient >> removeAll: aString [
 	^ [ 
 		self 
@@ -15754,4 +15764,26 @@ ArangoDBClient >> removeDocumentWithHandle: aString [
 			arguments: { #'collection' -> parts first }
 			body: { #'_key' -> parts second } asDictionary
 			beforeSendDo: [ :client |  ]
+]
+
+{ #category : #'as yet unclassified' }
+ArangoDBClient >> sizeOfCollection: aString [ 
+	| response |
+	response := self 
+			operationWithId: 'ReturnNumberOfDocumentsInACollection' 
+			arguments: { 'collection-name' -> aString } 
+			body: nil.
+	^ (NeoJSONReader fromString: response contents)
+		at: 'count'
+]
+
+{ #category : #'as yet unclassified' }
+ArangoDBClient >> updateDocument: anObject collection: aString [
+
+	^ self 
+		operation: (self openApi operationWithId: 'ReplaceDocuments') 
+		arguments: { #collection -> aString }
+		body: (Array with: anObject)
+		beforeSendDo: [ :client | ]
+		
 ]
