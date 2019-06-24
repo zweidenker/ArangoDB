@@ -15737,7 +15737,7 @@ ArangoDBClient >> readMany: aString where: where limit: limit offset: offset [
 { #category : #'as yet unclassified' }
 ArangoDBClient >> readOne: aString where: where [
 	| body |
-	body := { 'collection' -> aString . 'example' -> (where ifNil: [ {} ]) asPharoQuery } asDictionary.
+	body := { 'collection' -> aString . 'example' -> (where ifNil: [ {} ]) asPersistenceQuery } asDictionary.
 	^ self 
 			operationWithId: 'SimpleQueryBy-example' 
 			arguments: {} 

@@ -19,6 +19,9 @@ BaselineOfArangoDB >> baseline: spec [
 					spec 
 						repository: 'github://zweidenker/OpenAPI/source';
 						loads: #( 'Client' ) ];
+				baseline: 'PersistenceQuery' with: [ 
+					spec 
+						repository: 'github://pharo-nosql/PersistenceQuery' ];
 				baseline: 'Mocketry' with: [ spec repository: 'github://dionisiydk/Mocketry:v4.0.x'. ].
 
 			spec
