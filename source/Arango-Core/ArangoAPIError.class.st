@@ -1,16 +1,20 @@
 Class {
 	#name : #ArangoAPIError,
 	#superclass : #ArangoError,
-	#category : #'Arango-Core'
+	#category : #'Arango-Core-Exceptions'
 }
 
 { #category : #'as yet unclassified' }
-ArangoAPIError class >> fromResponse: aResponse [ 
-	| contents |
-	contents := NeoJSONReader fromString: aResponse contents.
-	^ (self withErrorNumber: (contents at: 'errorNum'))
-		initializeFromResponse: contents;
+ArangoAPIError class >> fromDictionary: aDictionary [ 
+	^ (self withErrorNumber: (aDictionary at: 'errorNum'))
+		initializeFromResponse: aDictionary;
 		signal
+]
+
+{ #category : #'as yet unclassified' }
+ArangoAPIError class >> fromResponse: aResponse [ 
+	^ self fromDictionary: (NeoJSONReader fromString: aResponse contents)
+
 ]
 
 { #category : #'as yet unclassified' }

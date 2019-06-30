@@ -1,5 +1,5 @@
 Class {
 	#name : #ArangoError,
 	#superclass : #Error,
-	#category : #'Arango-Core'
+	#category : #'Arango-Core-Exceptions'
 }

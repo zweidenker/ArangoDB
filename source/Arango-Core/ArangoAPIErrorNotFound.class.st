@@ -1,5 +1,5 @@
 Class {
 	#name : #ArangoAPIErrorNotFound,
 	#superclass : #ArangoError,
-	#category : #'Arango-Core'
+	#category : #'Arango-Core-Exceptions'
 }

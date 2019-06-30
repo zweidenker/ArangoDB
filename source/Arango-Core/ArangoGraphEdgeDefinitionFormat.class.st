@@ -1,7 +1,7 @@
 Class {
 	#name : #ArangoGraphEdgeDefinitionFormat,
 	#superclass : #JSONFormat,
-	#category : #'Arango-Core'
+	#category : #'Arango-Core-JSONSchema'
 }
 
 { #category : #formatting }

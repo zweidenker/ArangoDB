@@ -1,7 +1,7 @@
 Class {
 	#name : #ArangoDBClient,
 	#superclass : #OpenApiClient,
-	#category : #'Arango-Core'
+	#category : #'Arango-Core-Base'
 }
 
 { #category : #'as yet unclassified' }
@@ -15691,6 +15691,15 @@ ArangoDBClient class >> updateSpec [
 		^ ''', (content copyReplaceAll: $' asString with: ($' asString ,$' asString) ), ''''
 ]
 
+{ #category : #'as yet unclassified' }
+ArangoDBClient >> addEdgeDefinition: edgeDefinition graphName: graphName [
+
+	^ self 
+		operationWithId: 'AddEdgeDefinition'
+		arguments: { #graph -> graphName } 
+		body: edgeDefinition.
+]
+
 { #category : #accessing }
 ArangoDBClient >> buildOpenApi [ 
 	^ OpenAPI readFrom: self class openApiSpec readStream 
@@ -15716,8 +15725,103 @@ ArangoDBClient >> createDocument: anObject collection: aString [
 ]
 
 { #category : #'as yet unclassified' }
+ArangoDBClient >> createDocument: document collection: collectionName createMissing: aBoolean [
+
+	^ [ self createDocument: document collection: collectionName ]
+		on: ArangoCollectionNotFoundError 
+		do: [ :error |
+			aBoolean ifFalse: [ ^ error pass ].
+			"mimick mongo behaviour and auto-create collection and repeat
+			adding document"
+			self 
+				createCollection: collectionName;
+				createDocument: document collection: collectionName ].
+]
+
+{ #category : #'as yet unclassified' }
+ArangoDBClient >> createEdgeFrom: from to: to inCollection: collectionName forGraphNamed: graphName properties: properties [
+	| body |
+	body := { 
+		#'_from' -> from handleString. 
+		#'_to' -> to handleString. } asDictionary.
+		
+	properties ifNotNil: [ 
+		properties keysAndValuesDo: [ :key :value |
+			body at: key put: value ] ].
+	self
+		operationWithId: 'CreateAnEdge' 
+		arguments: { 
+			#graph -> graphName .
+			#collection -> collectionName }
+		body: body 
+]
+
+{ #category : #'as yet unclassified' }
+ArangoDBClient >> createEdgeFrom: from to: to inCollection: collectionName forGraphNamed: graphName properties: properties createMissing: aBoolean [
+	[[ self
+		createEdgeFrom: from 
+		to: to 
+		inCollection: collectionName 
+		forGraphNamed: graphName 
+		properties: properties ]
+			on: ArangoCollectionNotFoundError 
+			do: [ :err |
+				aBoolean ifFalse: [ ^ err pass ].
+				self 
+					addEdgeDefinition: { 
+						#from -> (Array with: from collectionName).
+						#to -> (Array with: to collectionName).
+						#collection -> collectionName } asDictionary
+					graphName: graphName.
+				self
+					createEdgeFrom: from 
+					to: to 
+					inCollection: collectionName 
+					forGraphNamed: graphName 
+					properties: properties ]]
+			on: ArangoGraphNotFoundError 
+			do: [ :error |
+				self 
+					createGraphNamed: graphName
+					edgeDefinitions: (Array with: {
+						'from' -> (Array with: from collectionName).
+						'to' -> (Array with: to collectionName).
+						'collection' -> collectionName } asDictionary).
+				self
+					createEdgeFrom: from 
+					to: to 
+					inCollection: collectionName 
+					forGraphNamed: graphName 
+					properties: properties ]
+]
+
+{ #category : #'as yet unclassified' }
+ArangoDBClient >> createGraphNamed: aString edgeDefinitions: aCollection [ 
+
+	^ self 
+		operation: (self openApi operationWithId: 'CreateAGraph') 
+		arguments: {  }
+		body: { 
+			#name -> aString.
+			#edgeDefinitions -> aCollection } asDictionary
+]
+
+{ #category : #'as yet unclassified' }
+ArangoDBClient >> ensureEdgeCollectionExists: createBlock ifAbsent: absentBlock [
+	[ createBlock value ]
+		on: ArangoCollectionNotFoundError 
+		do: [ :err |
+			absentBlock value.
+			createBlock value ]
+]
+
+{ #category : #'as yet unclassified' }
 ArangoDBClient >> handleError: anObject response: aResponse [ 
-	(ArangoAPIError fromResponse: anObject) signal
+	(anObject isKindOf: Dictionary)
+		ifTrue: [  
+			(ArangoAPIError fromDictionary: anObject) signal ]
+		ifFalse: [ 
+			(ArangoAPIError fromResponse: anObject) signal ]
 ]
 
 { #category : #'as yet unclassified' }

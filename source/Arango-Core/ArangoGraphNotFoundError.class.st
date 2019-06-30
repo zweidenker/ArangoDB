@@ -1,10 +1,10 @@
 Class {
-	#name : #ArangoCollectionNotFoundError,
+	#name : #ArangoGraphNotFoundError,
 	#superclass : #ArangoAPIError,
 	#category : #'Arango-Core-Exceptions'
 }
 
 { #category : #'as yet unclassified' }
-ArangoCollectionNotFoundError class >> errorNumber [
-	^ 1203
+ArangoGraphNotFoundError class >> errorNumber [
+	^ 1924
 ]
