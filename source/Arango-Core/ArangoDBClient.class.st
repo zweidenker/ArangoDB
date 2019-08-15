@@ -6,7 +6,7 @@ Class {
 
 { #category : #'as yet unclassified' }
 ArangoDBClient class >> openApiSpec [ 
-		"API spec compiled at: 2019-06-01T11:51:06+02:00"
+		"API spec compiled at: 2019-08-13T16:02:34+02:00"
 		^ '{
     "openapi": "3.0.0",
     "info": {
@@ -10711,7 +10711,6 @@ ArangoDBClient class >> openApiSpec [
                     }
                 },
                 "required": [
-                    "edge"
                 ],
                 "type": "object",
                 "x-filename": "/home/willi/src/devel/Documentation/DocuBlocks/Rest/Graph/general_graph_edge_get_http_examples.md"
@@ -15678,7 +15677,8 @@ ArangoDBClient class >> openApiSpec [
             }
         }
     }
-}'
+}
+'
 ]
 
 { #category : #'as yet unclassified' }
@@ -15698,6 +15698,20 @@ ArangoDBClient >> addEdgeDefinition: edgeDefinition graphName: graphName [
 		operationWithId: 'AddEdgeDefinition'
 		arguments: { #graph -> graphName } 
 		body: edgeDefinition.
+]
+
+{ #category : #'as yet unclassified' }
+ArangoDBClient >> basicReadMany: aString where: where limit: limit offset: offset [
+	| body |
+	body := { 'collection' -> aString . 'example' -> (where ifNil: [ {} ]) asDictionary } asDictionary.
+	offset ifNotNil: [ 
+		body at: 'skip' put: offset ].
+	limit ifNotNil: [ 
+		body at: 'limit' put: limit ].
+	^ self 
+			operationWithId: 'SimpleQueryBy-example' 
+			arguments: {} 
+			body: body
 ]
 
 { #category : #accessing }
@@ -15825,17 +15839,16 @@ ArangoDBClient >> handleError: anObject response: aResponse [
 ]
 
 { #category : #'as yet unclassified' }
+ArangoDBClient >> readMany: aString where: where [ 
+	^ self readMany: aString where: where limit: nil offset: nil
+]
+
+{ #category : #'as yet unclassified' }
 ArangoDBClient >> readMany: aString where: where limit: limit offset: offset [
-	| body |
-	body := { 'collection' -> aString . 'example' -> (where ifNil: [ {} ]) asDictionary } asDictionary.
-	offset ifNotNil: [ 
-		body at: 'skip' put: offset ].
-	limit ifNotNil: [ 
-		body at: 'limit' put: limit ].
-	^ self 
-			operationWithId: 'SimpleQueryBy-example' 
-			arguments: {} 
-			body: body
+	
+	| response |
+	response := self basicReadMany: aString where: where limit: limit offset: offset.
+	^ (NeoJSONReader fromString: response contents) at: #result
 ]
 
 { #category : #'as yet unclassified' }
