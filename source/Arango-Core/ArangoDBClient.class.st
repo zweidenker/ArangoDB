@@ -15693,11 +15693,55 @@ ArangoDBClient class >> updateSpec [
 
 { #category : #'as yet unclassified' }
 ArangoDBClient >> addEdgeDefinition: edgeDefinition graphName: graphName [
-
-	^ self 
+	self 
 		operationWithId: 'AddEdgeDefinition'
 		arguments: { #graph -> graphName } 
 		body: edgeDefinition.
+]
+
+{ #category : #'as yet unclassified' }
+ArangoDBClient >> basicCreateCollection: aString [
+	^ self 
+		operationWithId: 'CreateCollection' 
+		arguments: {  }
+		body: { #name -> aString } asDictionary
+]
+
+{ #category : #'as yet unclassified' }
+ArangoDBClient >> basicCreateDocument: anObject collection: aString [
+	^ self 
+		operation: (self openApi operationWithId: 'CreateDocument') 
+		arguments: { #collection -> aString }
+		body: anObject
+		beforeSendDo: [ :client | client request uri query removeKey: 'collection' ]
+]
+
+{ #category : #'as yet unclassified' }
+ArangoDBClient >> basicCreateEdgeFrom: from to: to inCollection: collectionName forGraphNamed: graphName properties: properties [
+	| body |
+	body := { 
+		#'_from' -> from handleString. 
+		#'_to' -> to handleString. } asDictionary.
+		
+	properties ifNotNil: [ 
+		properties keysAndValuesDo: [ :key :value |
+			body at: key put: value ] ].
+	^ self
+		operationWithId: 'CreateAnEdge' 
+		arguments: { 
+			#graph -> graphName .
+			#collection -> collectionName }
+		body: body 
+]
+
+{ #category : #'as yet unclassified' }
+ArangoDBClient >> basicCreateGraphNamed: aString edgeDefinitions: aCollection [ 
+	^ self 
+		operation: (self openApi operationWithId: 'CreateAGraph') 
+		arguments: {  }
+		body: { 
+			#name -> aString.
+			#edgeDefinitions -> aCollection } asDictionary
 ]
 
 { #category : #'as yet unclassified' }
@@ -15714,6 +15758,38 @@ ArangoDBClient >> basicReadMany: aString where: where limit: limit offset: offse
 			body: body
 ]
 
+{ #category : #'as yet unclassified' }
+ArangoDBClient >> basicReadOne: aString where: where [
+	| body |
+	body := { 'collection' -> aString . 'example' -> (where ifNotNil: [ where asPersistenceQuery ] ifNil: [ Dictionary new ])} asDictionary.
+	^ self 
+			operationWithId: 'SimpleQueryBy-example' 
+			arguments: {} 
+			body: body
+]
+
+{ #category : #'as yet unclassified' }
+ArangoDBClient >> basicRemoveAll: aString [
+	^ [ 
+		self 
+			operationWithId: 'RemoveDocumentsByExample' 
+			arguments: {  }
+			body: { #collection -> aString. #example -> Dictionary new  } asDictionary ]
+		on: Error 
+		do: [ :err | ]
+]
+
+{ #category : #'as yet unclassified' }
+ArangoDBClient >> basicUpdateDocument: anObject collection: aString [
+
+	^ self 
+		operation: (self openApi operationWithId: 'ReplaceDocuments') 
+		arguments: { #collection -> aString }
+		body: (Array with: anObject)
+		beforeSendDo: [ :client | ]
+		
+]
+
 { #category : #accessing }
 ArangoDBClient >> buildOpenApi [ 
 	^ OpenAPI readFrom: self class openApiSpec readStream 
@@ -15721,21 +15797,19 @@ ArangoDBClient >> buildOpenApi [
 
 { #category : #'as yet unclassified' }
 ArangoDBClient >> createCollection: aString [
-	^ self 
-		operationWithId: 'CreateCollection' 
-		arguments: {  }
-		body: { #name -> aString } asDictionary
+	self basicCreateCollection: aString
 ]
 
 { #category : #'as yet unclassified' }
 ArangoDBClient >> createDocument: anObject collection: aString [
-
-	^ self 
-		operation: (self openApi operationWithId: 'CreateDocument') 
-		arguments: { #collection -> aString }
-		body: anObject
-		beforeSendDo: [ :client | client request uri query removeKey: 'collection' ]
-		
+	| response |
+	response :=  self readJSON: (self 
+		basicCreateDocument: anObject 
+		collection: aString).
+	^ ArangoDocumentHandle new
+		key: (response at: '_key');
+		collection: aString;
+		revision: (response at: '_rev')
 ]
 
 { #category : #'as yet unclassified' }
@@ -15754,20 +15828,14 @@ ArangoDBClient >> createDocument: document collection: collectionName createMiss
 
 { #category : #'as yet unclassified' }
 ArangoDBClient >> createEdgeFrom: from to: to inCollection: collectionName forGraphNamed: graphName properties: properties [
-	| body |
-	body := { 
-		#'_from' -> from handleString. 
-		#'_to' -> to handleString. } asDictionary.
-		
-	properties ifNotNil: [ 
-		properties keysAndValuesDo: [ :key :value |
-			body at: key put: value ] ].
-	self
-		operationWithId: 'CreateAnEdge' 
-		arguments: { 
-			#graph -> graphName .
-			#collection -> collectionName }
-		body: body 
+	| response |
+	response := self 
+		basicCreateEdgeFrom: from 
+		to: to 
+		inCollection: collectionName 
+		forGraphNamed: graphName 
+		properties: properties.
+	^ response 
 ]
 
 { #category : #'as yet unclassified' }
@@ -15811,13 +15879,9 @@ ArangoDBClient >> createEdgeFrom: from to: to inCollection: collectionName forGr
 
 { #category : #'as yet unclassified' }
 ArangoDBClient >> createGraphNamed: aString edgeDefinitions: aCollection [ 
-
 	^ self 
-		operation: (self openApi operationWithId: 'CreateAGraph') 
-		arguments: {  }
-		body: { 
-			#name -> aString.
-			#edgeDefinitions -> aCollection } asDictionary
+		basicCreateGraphNamed: aString 
+		edgeDefinitions: aCollection 
 ]
 
 { #category : #'as yet unclassified' }
@@ -15839,37 +15903,41 @@ ArangoDBClient >> handleError: anObject response: aResponse [
 ]
 
 { #category : #'as yet unclassified' }
+ArangoDBClient >> readJSON: aString [
+	^ NeoJSONReader fromString: aString
+]
+
+{ #category : #'as yet unclassified' }
+ArangoDBClient >> readJSONResult: aString [
+	^ (self readJSON: aString) at: #result
+]
+
+{ #category : #'as yet unclassified' }
 ArangoDBClient >> readMany: aString where: where [ 
 	^ self readMany: aString where: where limit: nil offset: nil
 ]
 
 { #category : #'as yet unclassified' }
-ArangoDBClient >> readMany: aString where: where limit: limit offset: offset [
-	
+ArangoDBClient >> readMany: aString where: where limit: limit offset: offset [	
 	| response |
-	response := self basicReadMany: aString where: where limit: limit offset: offset.
-	^ (NeoJSONReader fromString: response contents) at: #result
+	response := self 
+		basicReadMany: aString 
+		where: where 
+		limit: limit 
+		offset: offset.
+	^ self readJSONResult: response contents
 ]
 
 { #category : #'as yet unclassified' }
 ArangoDBClient >> readOne: aString where: where [
-	| body |
-	body := { 'collection' -> aString . 'example' -> (where ifNotNil: [ where asPersistenceQuery ] ifNil: [ Dictionary new ])} asDictionary.
-	^ self 
-			operationWithId: 'SimpleQueryBy-example' 
-			arguments: {} 
-			body: body
+	| response |
+	response := self basicReadOne: aString where: where.
+	^ (self readJSONResult: response contents) anyOne
 ]
 
 { #category : #'as yet unclassified' }
 ArangoDBClient >> removeAll: aString [
-	^ [ 
-		self 
-			operationWithId: 'RemoveDocumentsByExample' 
-			arguments: {  }
-			body: { #collection -> aString. #example -> Dictionary new  } asDictionary ]
-		on: Error 
-		do: [ :err | ]
+	^ self basicRemoveAll: aString
 ]
 
 { #category : #'as yet unclassified' }
@@ -15890,17 +15958,14 @@ ArangoDBClient >> sizeOfCollection: aString [
 			operationWithId: 'ReturnNumberOfDocumentsInACollection' 
 			arguments: { 'collection-name' -> aString } 
 			body: nil.
-	^ (NeoJSONReader fromString: response contents)
+	^ (self readJSON: response contents)
 		at: 'count'
 ]
 
 { #category : #'as yet unclassified' }
 ArangoDBClient >> updateDocument: anObject collection: aString [
-
 	^ self 
-		operation: (self openApi operationWithId: 'ReplaceDocuments') 
-		arguments: { #collection -> aString }
-		body: (Array with: anObject)
-		beforeSendDo: [ :client | ]
-		
+		basicUpdateDocument: anObject 
+		collection: aString
+
 ]

@@ -4,8 +4,8 @@ Class {
 	#instVars : [
 		'collection',
 		'key',
-		'repository',
-		'document'
+		'document',
+		'revision'
 	],
 	#category : #'Arango-Core-Model'
 }
@@ -22,7 +22,7 @@ ArangoDocumentHandle >> collection: anObject [
 
 { #category : #'as yet unclassified' }
 ArangoDocumentHandle >> collectionName [
-	^ repository collectionNameFor: document class
+	^ collection 
 ]
 
 { #category : #accessing }
@@ -37,7 +37,7 @@ ArangoDocumentHandle >> document: anObject [
 
 { #category : #'as yet unclassified' }
 ArangoDocumentHandle >> handleString [
-	^ repository documentHandle: document
+	^ $/ join: { collection . key }
 ]
 
 { #category : #accessing }
@@ -51,11 +51,11 @@ ArangoDocumentHandle >> key: anObject [
 ]
 
 { #category : #accessing }
-ArangoDocumentHandle >> repository [
-	^ repository
+ArangoDocumentHandle >> revision [
+	^ revision
 ]
 
-{ #category : #accessing }
-ArangoDocumentHandle >> repository: anObject [
-	repository := anObject
+{ #category : #'as yet unclassified' }
+ArangoDocumentHandle >> revision: aString [ 
+	revision := aString
 ]
