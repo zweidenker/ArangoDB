@@ -4,6 +4,9 @@ sudo: required
 os:
   - linux
 
+before_install:
+  - bash .install_arangodb.sh
+
 smalltalk:
   - Pharo-6.1
   - Pharo-7.0
