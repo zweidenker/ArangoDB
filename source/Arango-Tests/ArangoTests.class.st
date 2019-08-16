@@ -1,16 +1,20 @@
 Class {
 	#name : #ArangoTests,
 	#superclass : #TestCase,
+	#instVars : [
+		'arango'
+	],
 	#category : #'Arango-Tests'
 }
 
-{ #category : #tests }
-ArangoTests >> testCallCreateDocument [
-	| arango |
-	arango := ArangoDBClient new baseUri: 'http://test.com'.
-	arango httpClient stub.
-	arango createDocument: { #foo -> #bar } asDictionary collection: 'test-collection'.
-	arango httpClient should receive url: 'http://test.com/_api/document/test-collection?collection=test-collection' asZnUrl.
-	arango httpClient should receive entity: (ZnEntity with: '{"foo":"bar"}' type: ZnMimeType applicationJson setCharSetUTF8).
-	arango httpClient should receive execute 
+{ #category : #'as yet unclassified' }
+ArangoTests >> createTestDatabase [
+	arango createDatabaseNamed: 'pharo-tests'
+]
+
+{ #category : #running }
+ArangoTests >> setUp [
+	arango := ArangoDBClient new 
+		baseUri: self baseUri.
+
 ]

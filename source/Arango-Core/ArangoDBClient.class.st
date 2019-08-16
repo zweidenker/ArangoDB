@@ -15707,6 +15707,14 @@ ArangoDBClient >> basicCreateCollection: aString [
 		body: { #name -> aString } asDictionary
 ]
 
+{ #category : #api }
+ArangoDBClient >> basicCreateDatabase: aString [ 
+	^ self 
+		operationWithId: 'CreateDatabase' 
+		arguments: {  }
+		body: { #name -> aString } asDictionary
+]
+
 { #category : #'as yet unclassified' }
 ArangoDBClient >> basicCreateDocument: anObject collection: aString [
 	^ self 
@@ -15798,6 +15806,11 @@ ArangoDBClient >> buildOpenApi [
 { #category : #'as yet unclassified' }
 ArangoDBClient >> createCollection: aString [
 	self basicCreateCollection: aString
+]
+
+{ #category : #api }
+ArangoDBClient >> createDatabaseNamed: aString [ 
+	self basicCreateDatabase: aString
 ]
 
 { #category : #'as yet unclassified' }
@@ -15894,6 +15907,20 @@ ArangoDBClient >> ensureEdgeCollectionExists: createBlock ifAbsent: absentBlock 
 ]
 
 { #category : #'as yet unclassified' }
+ArangoDBClient >> handleError: anObject request: aRequest response: aResponse [ 
+	| error |
+	error := (anObject isKindOf: Dictionary)
+		ifTrue: [  
+			(ArangoAPIError fromDictionary: anObject) ]
+		ifFalse: [ 
+			(ArangoAPIError fromResponse: anObject) ].
+	error 
+		request: aRequest;
+		response: aResponse;
+		signal
+]
+
+{ #category : #'as yet unclassified' }
 ArangoDBClient >> handleError: anObject response: aResponse [ 
 	(anObject isKindOf: Dictionary)
 		ifTrue: [  
@@ -15904,7 +15931,7 @@ ArangoDBClient >> handleError: anObject response: aResponse [
 
 { #category : #'as yet unclassified' }
 ArangoDBClient >> readJSON: aString [
-	^ NeoJSONReader fromString: aString
+	^ NeoJSONReader fromString: aString asString 
 ]
 
 { #category : #'as yet unclassified' }
@@ -15938,6 +15965,15 @@ ArangoDBClient >> readOne: aString where: where [
 { #category : #'as yet unclassified' }
 ArangoDBClient >> removeAll: aString [
 	^ self basicRemoveAll: aString
+]
+
+{ #category : #api }
+ArangoDBClient >> removeCollection: aString [ 
+	^ self 
+			operation: (self openApi operationWithId: 'DropsACollection') 
+			arguments: { #'collection-name' -> aString }
+			body: { } asDictionary
+			beforeSendDo: [ :client |  ]
 ]
 
 { #category : #'as yet unclassified' }
