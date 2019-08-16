@@ -9,14 +9,26 @@ ArangoOnlineTests >> baseUri [
 	^ 'http://localhost:8529/'
 ]
 
+{ #category : #tests }
+ArangoOnlineTests >> collectionNameForTest [
+	^ 'test-collection'
+]
+
+{ #category : #tests }
+ArangoOnlineTests >> createExampleDocument [
+	arango 
+		createDocument: { #foo -> #bar } asDictionary 
+		collection: self collectionNameForTest .
+]
+
 { #category : #'as yet unclassified' }
 ArangoOnlineTests >> createTestCollection [
-	arango createCollection: 'test-collection'
+	arango createCollection: self collectionNameForTest 
 ]
 
 { #category : #'as yet unclassified' }
 ArangoOnlineTests >> removeTestCollection [
-	arango removeCollection: 'test-collection'
+	arango removeCollection: self collectionNameForTest 
 ]
 
 { #category : #running }
@@ -34,5 +46,16 @@ ArangoOnlineTests >> tearDown [
 
 { #category : #tests }
 ArangoOnlineTests >> testCallCreateDocument [
-	arango createDocument: { #foo -> #bar } asDictionary collection: 'test-collection'.
+	self createExampleDocument 
+]
+
+{ #category : #tests }
+ArangoOnlineTests >> testSearchExampleDocument [
+	| result |
+	self createExampleDocument.
+	result := arango 
+		readOne: self collectionNameForTest
+		where: { #foo -> #bar } asDictionary.
+		
+	self assert: (result at: #foo) equals: #bar
 ]
