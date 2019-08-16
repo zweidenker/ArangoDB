@@ -11,7 +11,7 @@ BaselineOfArangoDB >> baseline: spec [
 		for: #common
 		do: [ 
 			spec
-				package: 'Arango-Core' with: [ spec requires: #('OpenAPI') ];
+				package: 'Arango-Core' with: [ spec requires: #('OpenAPI' 'PersistenceQuery') ];
 				package: 'Arango-Tests' with: [ spec requires: #('Arango-Core' 'Mocketry'). ].
 
 			spec 
