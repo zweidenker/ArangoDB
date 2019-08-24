@@ -16000,8 +16000,12 @@ ArangoDBClient >> sizeOfCollection: aString [
 
 { #category : #'as yet unclassified' }
 ArangoDBClient >> updateDocument: anObject collection: aString [
-	^ self 
+	| response |
+	response := (self readJSON: (self 
 		basicUpdateDocument: anObject 
-		collection: aString
-
+		collection: aString)) anyOne.
+	^ ArangoDocumentHandle new
+		key: (response at: '_key');
+		collection: aString;
+		revision: (response at: '_rev')
 ]
